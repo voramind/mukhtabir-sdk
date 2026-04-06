@@ -1,0 +1,107 @@
+name: Python SDK
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "python/**"
+      - ".github/workflows/python-sdk.yml"
+  pull_request:
+    paths:
+      - "python/**"
+      - ".github/workflows/python-sdk.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: python
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: python/pyproject.toml
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Run unit tests
+        run: python -m pytest -m "not integration"
+
+  live-integration:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false
+    needs: unit-tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: python
+    env:
+      MUKHTABIR_API_KEY: ${{ secrets.MUKHTABIR_API_KEY }}
+      MUKHTABIR_BASE_URL: ${{ vars.MUKHTABIR_BASE_URL }}
+      MUKHTABIR_INTEGRATION_INTERVIEW_ID: ${{ vars.MUKHTABIR_INTEGRATION_INTERVIEW_ID }}
+      MUKHTABIR_INTEGRATION_FEEDBACK_ID: ${{ vars.MUKHTABIR_INTEGRATION_FEEDBACK_ID }}
+      MUKHTABIR_INTEGRATION_EXTERNAL_FEEDBACK_ID: ${{ vars.MUKHTABIR_INTEGRATION_EXTERNAL_FEEDBACK_ID }}
+      MUKHTABIR_INTEGRATION_EXTERNAL_RECORDING_URL: ${{ vars.MUKHTABIR_INTEGRATION_EXTERNAL_RECORDING_URL }}
+      MUKHTABIR_INTEGRATION_CANDIDATE_EMAIL: ${{ vars.MUKHTABIR_INTEGRATION_CANDIDATE_EMAIL }}
+      MUKHTABIR_INTEGRATION_WEBHOOK_ID: ${{ vars.MUKHTABIR_INTEGRATION_WEBHOOK_ID }}
+      MUKHTABIR_INTEGRATION_LIMITED_API_KEY: ${{ secrets.MUKHTABIR_INTEGRATION_LIMITED_API_KEY }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: python/pyproject.toml
+
+      - name: Detect live integration configuration
+        id: live-config
+        run: |
+          missing=()
+          [[ -n "$MUKHTABIR_API_KEY" ]] || missing+=("secrets.MUKHTABIR_API_KEY")
+          [[ -n "$MUKHTABIR_INTEGRATION_INTERVIEW_ID" ]] || missing+=("vars.MUKHTABIR_INTEGRATION_INTERVIEW_ID")
+          [[ -n "$MUKHTABIR_INTEGRATION_FEEDBACK_ID" ]] || missing+=("vars.MUKHTABIR_INTEGRATION_FEEDBACK_ID")
+          [[ -n "$MUKHTABIR_INTEGRATION_EXTERNAL_FEEDBACK_ID" ]] || missing+=("vars.MUKHTABIR_INTEGRATION_EXTERNAL_FEEDBACK_ID")
+          [[ -n "$MUKHTABIR_INTEGRATION_EXTERNAL_RECORDING_URL" ]] || missing+=("vars.MUKHTABIR_INTEGRATION_EXTERNAL_RECORDING_URL")
+          [[ -n "$MUKHTABIR_INTEGRATION_CANDIDATE_EMAIL" ]] || missing+=("vars.MUKHTABIR_INTEGRATION_CANDIDATE_EMAIL")
+          [[ -n "$MUKHTABIR_INTEGRATION_WEBHOOK_ID" ]] || missing+=("vars.MUKHTABIR_INTEGRATION_WEBHOOK_ID")
+          [[ -n "$MUKHTABIR_INTEGRATION_LIMITED_API_KEY" ]] || missing+=("secrets.MUKHTABIR_INTEGRATION_LIMITED_API_KEY")
+
+          if (( ${#missing[@]} > 0 )); then
+            printf 'enabled=false\n' >> "$GITHUB_OUTPUT"
+            printf 'Skipping live integration tests because required configuration is missing:\n'
+            printf '  - %s\n' "${missing[@]}"
+            exit 0
+          fi
+          printf 'enabled=true\n' >> "$GITHUB_OUTPUT"
+
+      - name: Install dependencies
+        if: steps.live-config.outputs.enabled == 'true'
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Report skipped live integration tests
+        if: steps.live-config.outputs.enabled != 'true'
+        run: echo "Live integration tests skipped."
+
+      - name: Run live integration tests
+        if: steps.live-config.outputs.enabled == 'true'
+        run: ./scripts/run-live-integration.sh -q

@@ -1,0 +1,55 @@
+name: TypeScript SDK CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    defaults:
+      run:
+        working-directory: typescript
+
+    env:
+      MUKHTABIR_INTEGRATION: "1"
+      MUKHTABIR_API_KEY: ${{ secrets.MUKHTABIR_API_KEY }}
+      MUKHTABIR_BASE_URL: ${{ secrets.MUKHTABIR_BASE_URL }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: typescript/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests
+        run: npm test
+
+      - name: Run type checks
+        run: npm run typecheck
+
+      - name: Build package
+        run: npm run build
+
+      - name: Run package smoke
+        env:
+          MUKHTABIR_SKIP_PACKAGE_BUILD: "1"
+        run: npm run test:package
+
+      - name: Run live integration tests
+        run: npm run test:integration:live

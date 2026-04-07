@@ -11,6 +11,7 @@ import packageJson from "../../package.json";
 
 const execFileAsync = promisify(execFile);
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
+const PACKAGE_SMOKE_TIMEOUT_MS = 20_000;
 
 async function ensureBuilt(): Promise<void> {
   if (process.env.MUKHTABIR_SKIP_PACKAGE_BUILD === "1") {
@@ -38,40 +39,42 @@ async function runProbe(root: string, filename: string): Promise<void> {
 }
 
 describe("packed SDK artifact", () => {
-  it("loads the built package and subpath exports from a tarball", async () => {
-    await ensureBuilt();
+  it(
+    "loads the built package and subpath exports from a tarball",
+    async () => {
+      await ensureBuilt();
 
-    const tarball = await packPackage();
-    const consumerRoot = await mkdtemp(
-      join(tmpdir(), "mukhtabir-sdk-consumer-"),
-    );
+      const tarball = await packPackage();
+      const consumerRoot = await mkdtemp(
+        join(tmpdir(), "mukhtabir-sdk-consumer-"),
+      );
 
-    try {
-      await writeFile(
-        join(consumerRoot, "package.json"),
-        JSON.stringify(
+      try {
+        await writeFile(
+          join(consumerRoot, "package.json"),
+          JSON.stringify(
+            {
+              name: "mukhtabir-sdk-consumer",
+              private: true,
+              type: "module",
+            },
+            null,
+            2,
+          ),
+        );
+
+        await execFileAsync(
+          "npm",
+          ["install", "--ignore-scripts", "--no-save", tarball],
           {
-            name: "mukhtabir-sdk-consumer",
-            private: true,
-            type: "module",
+            cwd: consumerRoot,
           },
-          null,
-          2,
-        ),
-      );
+        );
 
-      await execFileAsync(
-        "npm",
-        ["install", "--ignore-scripts", "--no-save", tarball],
-        {
-          cwd: consumerRoot,
-        },
-      );
-
-      const esmProbe = join(consumerRoot, "probe.mjs");
-      await writeFile(
-        esmProbe,
-        `
+        const esmProbe = join(consumerRoot, "probe.mjs");
+        await writeFile(
+          esmProbe,
+          `
 import assert from "node:assert/strict";
 
 import * as sdk from "@mukhtabir/sdk";
@@ -92,12 +95,12 @@ assert.equal(typeof webhooks.parseWebhookEvent, "function");
 assert.equal(typeof webhooks.verifyWebhookSignature, "function");
 assert.equal(typeof webhooks.WebhookVerificationError, "function");
 `,
-      );
+        );
 
-      const cjsProbe = join(consumerRoot, "probe.cjs");
-      await writeFile(
-        cjsProbe,
-        `
+        const cjsProbe = join(consumerRoot, "probe.cjs");
+        await writeFile(
+          cjsProbe,
+          `
 const assert = require("node:assert/strict");
 
 const sdk = require("@mukhtabir/sdk");
@@ -116,12 +119,12 @@ assert.equal(typeof types, "object");
 assert.equal(typeof webhooks.computeWebhookSignature, "function");
 assert.equal(typeof webhooks.parseWebhookEvent, "function");
 `,
-      );
+        );
 
-      const typeProbe = join(consumerRoot, "probe-types.ts");
-      await writeFile(
-        typeProbe,
-        `
+        const typeProbe = join(consumerRoot, "probe-types.ts");
+        await writeFile(
+          typeProbe,
+          `
 import { Mukhtabir, type MukhtabirClient } from "@mukhtabir/sdk";
 import { paginate, type ApiSuccessResponse } from "@mukhtabir/sdk/core";
 import { CandidatesResource } from "@mukhtabir/sdk/resources";
@@ -188,43 +191,45 @@ void paginatedCandidates;
 const parsedEvent: Promise<ParsedWebhookEvent> = Promise.resolve({} as ParsedWebhookEvent);
 void parsedEvent;
 `,
-      );
+        );
 
-      const tsconfigPath = join(consumerRoot, "tsconfig.json");
-      await writeFile(
-        tsconfigPath,
-        JSON.stringify(
-          {
-            compilerOptions: {
-              module: "NodeNext",
-              moduleResolution: "NodeNext",
-              target: "ES2022",
-              lib: ["ES2022", "DOM"],
-              noEmit: true,
-              strict: true,
-              skipLibCheck: true,
-            },
-            include: ["./probe-types.ts"],
-          },
-          null,
-          2,
-        ),
-      );
-
-      await runProbe(consumerRoot, esmProbe);
-      await runProbe(consumerRoot, cjsProbe);
-      await execFileAsync(
-        "node",
-        [
-          resolve(packageRoot, "node_modules/typescript/bin/tsc"),
-          "--project",
+        const tsconfigPath = join(consumerRoot, "tsconfig.json");
+        await writeFile(
           tsconfigPath,
-        ],
-        { cwd: consumerRoot },
-      );
-    } finally {
-      await rm(consumerRoot, { recursive: true, force: true });
-      await rm(dirname(tarball), { recursive: true, force: true });
-    }
-  });
+          JSON.stringify(
+            {
+              compilerOptions: {
+                module: "NodeNext",
+                moduleResolution: "NodeNext",
+                target: "ES2022",
+                lib: ["ES2022", "DOM"],
+                noEmit: true,
+                strict: true,
+                skipLibCheck: true,
+              },
+              include: ["./probe-types.ts"],
+            },
+            null,
+            2,
+          ),
+        );
+
+        await runProbe(consumerRoot, esmProbe);
+        await runProbe(consumerRoot, cjsProbe);
+        await execFileAsync(
+          "node",
+          [
+            resolve(packageRoot, "node_modules/typescript/bin/tsc"),
+            "--project",
+            tsconfigPath,
+          ],
+          { cwd: consumerRoot },
+        );
+      } finally {
+        await rm(consumerRoot, { recursive: true, force: true });
+        await rm(dirname(tarball), { recursive: true, force: true });
+      }
+    },
+    PACKAGE_SMOKE_TIMEOUT_MS,
+  );
 });

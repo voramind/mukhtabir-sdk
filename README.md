@@ -41,6 +41,16 @@ There is no single root build step. Work inside the package you want to develop.
 
 ### Python SDK
 
+Install a published release from PyPI with `pip install mukhtabir`.
+
+For a local checkout:
+
+```bash
+pip install ./python
+```
+
+For development:
+
 ```bash
 cd python
 pip install -e ".[dev]"
@@ -54,6 +64,11 @@ pytest
 See [`python/README.md`](./python/README.md) for client usage, examples, and the optional seeded
 fixture environment variables that enable the expanded results, feedback, and webhook-delivery
 coverage.
+
+Tagged releases are published to PyPI by `.github/workflows/python-sdk-release.yml`. Bump
+`python/src/mukhtabir/_version.py`, merge to `main`, then push a `python-sdk-vX.Y.Z` tag after the
+PyPI project is configured to trust that workflow and the Python release secrets and vars remain in
+place for the live integration gate.
 
 ### TypeScript SDK
 

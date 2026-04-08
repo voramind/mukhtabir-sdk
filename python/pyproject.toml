@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "mukhtabir"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Typed Python SDK for the Mukhtabir API"
 readme = "README.md"
 license = { text = "MIT" }
@@ -27,6 +27,11 @@ classifiers = [
   "Typing :: Typed",
 ]
 
+[project.urls]
+Homepage = "https://github.com/voramind/mukhtabir-sdk"
+Repository = "https://github.com/voramind/mukhtabir-sdk"
+Issues = "https://github.com/voramind/mukhtabir-sdk/issues"
+
 [project.optional-dependencies]
 dev = [
   "mypy>=1.14,<2.0",
@@ -36,6 +41,9 @@ dev = [
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/mukhtabir"]
+
+[tool.hatch.version]
+path = "src/mukhtabir/_version.py"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

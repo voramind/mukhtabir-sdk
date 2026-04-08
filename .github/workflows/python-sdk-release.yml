@@ -1,0 +1,153 @@
+name: Publish Python SDK
+
+on:
+  push:
+    tags:
+      - "python-sdk-v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: python
+
+    env:
+      MUKHTABIR_API_KEY: ${{ secrets.MUKHTABIR_API_KEY }}
+      MUKHTABIR_BASE_URL: ${{ vars.MUKHTABIR_BASE_URL }}
+      MUKHTABIR_INTEGRATION_INTERVIEW_ID: ${{ vars.MUKHTABIR_INTEGRATION_INTERVIEW_ID }}
+      MUKHTABIR_INTEGRATION_FEEDBACK_ID: ${{ vars.MUKHTABIR_INTEGRATION_FEEDBACK_ID }}
+      MUKHTABIR_INTEGRATION_EXTERNAL_FEEDBACK_ID: ${{ vars.MUKHTABIR_INTEGRATION_EXTERNAL_FEEDBACK_ID }}
+      MUKHTABIR_INTEGRATION_EXTERNAL_RECORDING_URL: ${{ vars.MUKHTABIR_INTEGRATION_EXTERNAL_RECORDING_URL }}
+      MUKHTABIR_INTEGRATION_CANDIDATE_EMAIL: ${{ vars.MUKHTABIR_INTEGRATION_CANDIDATE_EMAIL }}
+      MUKHTABIR_INTEGRATION_WEBHOOK_ID: ${{ vars.MUKHTABIR_INTEGRATION_WEBHOOK_ID }}
+      MUKHTABIR_INTEGRATION_LIMITED_API_KEY: ${{ secrets.MUKHTABIR_INTEGRATION_LIMITED_API_KEY }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: python/pyproject.toml
+
+      - name: Verify tagged commit is on main
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          git fetch --no-tags origin main:refs/remotes/origin/main
+
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" "origin/main"; then
+            echo "Tagged commit $GITHUB_SHA is not reachable from origin/main."
+            exit 1
+          fi
+
+      - name: Verify tag version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          PACKAGE_VERSION="$(
+            python - <<'PY'
+            namespace: dict[str, str] = {}
+            with open("src/mukhtabir/_version.py", "r", encoding="utf-8") as handle:
+                exec(handle.read(), namespace)
+            print(namespace["__version__"])
+            PY
+          )"
+          TAG_VERSION="${GITHUB_REF_NAME#python-sdk-v}"
+
+          if [ "$PACKAGE_VERSION" != "$TAG_VERSION" ]; then
+            echo "Tag version $TAG_VERSION does not match package version $PACKAGE_VERSION."
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]" build twine
+
+      - name: Run unit tests
+        run: python -m pytest -m "not integration"
+
+      - name: Detect live integration configuration
+        id: live-config
+        run: |
+          missing=()
+          [[ -n "$MUKHTABIR_API_KEY" ]] || missing+=("secrets.MUKHTABIR_API_KEY")
+          [[ -n "$MUKHTABIR_INTEGRATION_INTERVIEW_ID" ]] || missing+=("vars.MUKHTABIR_INTEGRATION_INTERVIEW_ID")
+          [[ -n "$MUKHTABIR_INTEGRATION_FEEDBACK_ID" ]] || missing+=("vars.MUKHTABIR_INTEGRATION_FEEDBACK_ID")
+          [[ -n "$MUKHTABIR_INTEGRATION_EXTERNAL_FEEDBACK_ID" ]] || missing+=("vars.MUKHTABIR_INTEGRATION_EXTERNAL_FEEDBACK_ID")
+          [[ -n "$MUKHTABIR_INTEGRATION_EXTERNAL_RECORDING_URL" ]] || missing+=("vars.MUKHTABIR_INTEGRATION_EXTERNAL_RECORDING_URL")
+          [[ -n "$MUKHTABIR_INTEGRATION_CANDIDATE_EMAIL" ]] || missing+=("vars.MUKHTABIR_INTEGRATION_CANDIDATE_EMAIL")
+          [[ -n "$MUKHTABIR_INTEGRATION_WEBHOOK_ID" ]] || missing+=("vars.MUKHTABIR_INTEGRATION_WEBHOOK_ID")
+          [[ -n "$MUKHTABIR_INTEGRATION_LIMITED_API_KEY" ]] || missing+=("secrets.MUKHTABIR_INTEGRATION_LIMITED_API_KEY")
+
+          if (( ${#missing[@]} > 0 )); then
+            if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+              printf 'Tagged releases require live integration configuration:\n'
+              printf '  - %s\n' "${missing[@]}"
+              exit 1
+            fi
+
+            printf 'enabled=false\n' >> "$GITHUB_OUTPUT"
+            printf 'Skipping live integration tests because required configuration is missing:\n'
+            printf '  - %s\n' "${missing[@]}"
+            exit 0
+          fi
+
+          printf 'enabled=true\n' >> "$GITHUB_OUTPUT"
+
+      - name: Run live integration tests
+        if: steps.live-config.outputs.enabled == 'true'
+        run: ./scripts/run-live-integration.sh -q
+
+      - name: Build distribution artifacts
+        run: python -m build
+
+      - name: Validate distribution metadata
+        run: python -m twine check dist/*
+
+      - name: Smoke test built wheel
+        run: |
+          python -m venv ../python-sdk-release-smoke
+          ../python-sdk-release-smoke/bin/python -m pip install --upgrade pip
+          ../python-sdk-release-smoke/bin/python -m pip install dist/*.whl
+          ../python-sdk-release-smoke/bin/python -c "import mukhtabir; print(mukhtabir.__version__)"
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-sdk-dist
+          path: python/dist/*
+          if-no-files-found: error
+
+  publish:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi-release
+      url: https://pypi.org/project/mukhtabir/
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Download release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: python-sdk-dist
+          path: dist
+
+      - name: Publish package
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/

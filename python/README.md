@@ -8,8 +8,23 @@ Typed sync and async clients for the Mukhtabir API.
 
 ## Install
 
+Install a published release from PyPI:
+
 ```bash
 pip install mukhtabir
+```
+
+Install from a local checkout of this repository:
+
+```bash
+pip install ./python
+```
+
+For local SDK development:
+
+```bash
+cd python
+pip install -e ".[dev]"
 ```
 
 ## Quick Start
@@ -240,6 +255,20 @@ Import webhook request/response models and payload helpers from `mukhtabir.webho
 
 - `CreateWebhookRequest`, `UpdateWebhookRequest`
 - `WebhookDetails`, `WebhookCreateResult`, `WebhookPayload`
+
+## Publishing
+
+GitHub Actions publishes tags named `python-sdk-vX.Y.Z` to PyPI through
+`.github/workflows/python-sdk-release.yml`.
+
+1. Update `src/mukhtabir/_version.py`.
+2. Merge the release commit to `main`.
+3. Ensure the PyPI project `mukhtabir` trusts this repository's `pypi-release` GitHub Actions
+   environment before the first release.
+4. Push a tag named `python-sdk-vX.Y.Z`.
+5. Keep the Python release repository secrets and vars configured so the live integration gate can run on tags.
+
+Manual workflow runs build and validate the distribution artifacts without publishing them.
 
 ## Errors
 

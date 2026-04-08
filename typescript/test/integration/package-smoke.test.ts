@@ -77,11 +77,11 @@ describe("packed SDK artifact", () => {
           `
 import assert from "node:assert/strict";
 
-import * as sdk from "@mukhtabir/sdk";
-import * as core from "@mukhtabir/sdk/core";
-import * as resources from "@mukhtabir/sdk/resources";
-import * as types from "@mukhtabir/sdk/types";
-import * as webhooks from "@mukhtabir/sdk/webhooks";
+import * as sdk from "@voramind/mukhtabir-sdk";
+import * as core from "@voramind/mukhtabir-sdk/core";
+import * as resources from "@voramind/mukhtabir-sdk/resources";
+import * as types from "@voramind/mukhtabir-sdk/types";
+import * as webhooks from "@voramind/mukhtabir-sdk/webhooks";
 
 assert.equal(typeof sdk.Mukhtabir, "function");
 assert.equal(sdk.SDK_VERSION, ${JSON.stringify(packageJson.version)});
@@ -103,11 +103,11 @@ assert.equal(typeof webhooks.WebhookVerificationError, "function");
           `
 const assert = require("node:assert/strict");
 
-const sdk = require("@mukhtabir/sdk");
-const core = require("@mukhtabir/sdk/core");
-const resources = require("@mukhtabir/sdk/resources");
-const types = require("@mukhtabir/sdk/types");
-const webhooks = require("@mukhtabir/sdk/webhooks");
+const sdk = require("@voramind/mukhtabir-sdk");
+const core = require("@voramind/mukhtabir-sdk/core");
+const resources = require("@voramind/mukhtabir-sdk/resources");
+const types = require("@voramind/mukhtabir-sdk/types");
+const webhooks = require("@voramind/mukhtabir-sdk/webhooks");
 
 assert.equal(typeof sdk.Mukhtabir, "function");
 assert.equal(sdk.SDK_VERSION, ${JSON.stringify(packageJson.version)});
@@ -125,11 +125,11 @@ assert.equal(typeof webhooks.parseWebhookEvent, "function");
         await writeFile(
           typeProbe,
           `
-import { Mukhtabir, type MukhtabirClient } from "@mukhtabir/sdk";
-import { paginate, type ApiSuccessResponse } from "@mukhtabir/sdk/core";
-import { CandidatesResource } from "@mukhtabir/sdk/resources";
-import type { CandidateDetail, CandidateSummary, CreateCandidateRequest } from "@mukhtabir/sdk/types";
-import type { ParsedWebhookEvent } from "@mukhtabir/sdk/webhooks";
+import { Mukhtabir, type MukhtabirClient } from "@voramind/mukhtabir-sdk";
+import { paginate, type ApiSuccessResponse } from "@voramind/mukhtabir-sdk/core";
+import { CandidatesResource } from "@voramind/mukhtabir-sdk/resources";
+import type { CandidateDetail, CandidateSummary, CreateCandidateRequest } from "@voramind/mukhtabir-sdk/types";
+import type { ParsedWebhookEvent } from "@voramind/mukhtabir-sdk/webhooks";
 
 const client: MukhtabirClient = new Mukhtabir({
   apiKey: "mk_test",

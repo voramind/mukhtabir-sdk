@@ -5,7 +5,7 @@ Official TypeScript SDK for the Mukhtabir API.
 ## Install
 
 ```bash
-npm install @mukhtabir/sdk
+npm install @voramind/mukhtabir-sdk
 ```
 
 Node 18+ is required. In other runtimes, provide a compatible `fetch` implementation.
@@ -15,7 +15,7 @@ The snippets below use `logger` as a placeholder for your application's structur
 ## Quick Start
 
 ```ts
-import { Mukhtabir } from "@mukhtabir/sdk";
+import { Mukhtabir } from "@voramind/mukhtabir-sdk";
 
 const client = new Mukhtabir({
   apiKey: process.env.MUKHTABIR_API_KEY!,
@@ -61,7 +61,7 @@ logger.info("Mukhtabir invite created", {
 | `client.feedback` | `get`, `transcript`, `recordingUrl` |
 | `client.webhooks` | `create`, `list`, `listAll`, `get`, `update`, `delete`, `test`, `deliveries`, `deliveriesAll` |
 
-All request and response types are exported from `@mukhtabir/sdk`. If you want narrower imports, the package also exposes `@mukhtabir/sdk/core`, `@mukhtabir/sdk/resources`, `@mukhtabir/sdk/types`, and `@mukhtabir/sdk/webhooks`.
+All request and response types are exported from `@voramind/mukhtabir-sdk`. If you want narrower imports, the package also exposes `@voramind/mukhtabir-sdk/core`, `@voramind/mukhtabir-sdk/resources`, `@voramind/mukhtabir-sdk/types`, and `@voramind/mukhtabir-sdk/webhooks`.
 
 ## Interview Content Mutations
 
@@ -109,7 +109,7 @@ If you need custom pagination flow, the package also exports `paginate`.
 Use the raw request body when verifying Mukhtabir webhooks.
 
 ```ts
-import { parseWebhookEvent } from "@mukhtabir/sdk";
+import { parseWebhookEvent } from "@voramind/mukhtabir-sdk";
 
 export async function POST(request: Request) {
   const body = await request.text();
@@ -135,7 +135,7 @@ By default, `parseWebhookEvent` verifies signatures and enforces a 5-minute repl
 SDK failures throw typed errors that extend `MukhtabirError`, including `AuthenticationError`, `ValidationError`, `NotFoundError`, `RateLimitError`, `ServerError`, `TimeoutError`, `ConnectionError`, and `WebhookVerificationError`.
 
 ```ts
-import { Mukhtabir, RateLimitError } from "@mukhtabir/sdk";
+import { Mukhtabir, RateLimitError } from "@voramind/mukhtabir-sdk";
 
 const client = new Mukhtabir({
   apiKey: process.env.MUKHTABIR_API_KEY!,

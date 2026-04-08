@@ -283,7 +283,7 @@ describe("MukhtabirTransport", () => {
 
     expect(headers.get("x-mukhtabir-sdk-version")).toBe(packageJson.version);
     expect(headers.get("user-agent")).toBe(
-      `@mukhtabir/sdk/${packageJson.version}`,
+      `@voramind/mukhtabir-sdk/${packageJson.version}`,
     );
   });
 });

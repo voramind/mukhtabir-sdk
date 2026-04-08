@@ -306,7 +306,7 @@ export class MukhtabirTransport {
       headers: normalizeHeaders(options.headers),
       retry: resolveRetryPolicy(options.retry),
       timeoutMs: options.timeoutMs ?? 30_000,
-      userAgent: options.userAgent ?? `@mukhtabir/sdk/${SDK_VERSION}`,
+      userAgent: options.userAgent ?? `@voramind/mukhtabir-sdk/${SDK_VERSION}`,
       sdkVersion: SDK_VERSION,
     };
   }

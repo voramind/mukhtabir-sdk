@@ -266,7 +266,8 @@ GitHub Actions publishes tags named `python-sdk-vX.Y.Z` to PyPI through
 3. Ensure the PyPI project `mukhtabir` trusts this repository's `pypi-release` GitHub Actions
    environment before the first release.
 4. Push a tag named `python-sdk-vX.Y.Z`.
-5. Keep the Python release repository secrets and vars configured so the live integration gate can run on tags.
+5. If the Python release repository secrets and vars are configured, the workflow also runs the
+   live integration gate before publishing; otherwise it skips that step.
 
 Manual workflow runs build and validate the distribution artifacts without publishing them.
 

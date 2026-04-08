@@ -111,8 +111,8 @@ coverage.
 
 Tagged releases are published to PyPI by `.github/workflows/python-sdk-release.yml`. Bump
 `python/src/mukhtabir/_version.py`, merge to `main`, then push a `python-sdk-vX.Y.Z` tag after the
-PyPI project is configured to trust that workflow and the Python release secrets and vars remain in
-place for the live integration gate.
+PyPI project is configured to trust that workflow. If the Python live-integration secrets and vars
+are configured, the release workflow runs that gate before publishing; otherwise it skips it.
 
 ### TypeScript SDK
 

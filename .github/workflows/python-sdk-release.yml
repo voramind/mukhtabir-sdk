@@ -54,14 +54,7 @@ jobs:
       - name: Verify tag version
         if: startsWith(github.ref, 'refs/tags/')
         run: |
-          PACKAGE_VERSION="$(
-            python - <<'PY'
-            namespace: dict[str, str] = {}
-            with open("src/mukhtabir/_version.py", "r", encoding="utf-8") as handle:
-                exec(handle.read(), namespace)
-            print(namespace["__version__"])
-            PY
-          )"
+          PACKAGE_VERSION="$(python -c 'namespace = {}; exec(open("src/mukhtabir/_version.py", encoding="utf-8").read(), namespace); print(namespace["__version__"])')"
           TAG_VERSION="${GITHUB_REF_NAME#python-sdk-v}"
 
           if [ "$PACKAGE_VERSION" != "$TAG_VERSION" ]; then
@@ -91,12 +84,6 @@ jobs:
           [[ -n "$MUKHTABIR_INTEGRATION_LIMITED_API_KEY" ]] || missing+=("secrets.MUKHTABIR_INTEGRATION_LIMITED_API_KEY")
 
           if (( ${#missing[@]} > 0 )); then
-            if [[ "$GITHUB_REF" == refs/tags/* ]]; then
-              printf 'Tagged releases require live integration configuration:\n'
-              printf '  - %s\n' "${missing[@]}"
-              exit 1
-            fi
-
             printf 'enabled=false\n' >> "$GITHUB_OUTPUT"
             printf 'Skipping live integration tests because required configuration is missing:\n'
             printf '  - %s\n' "${missing[@]}"

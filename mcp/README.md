@@ -2,6 +2,18 @@
 
 TypeScript MCP server for Mukhtabir. It exposes Mukhtabir interviews, candidates, feedback, and webhooks through MCP tools, resources, and prompts.
 
+## Install
+
+```bash
+npm install -g @voramind/mukhtabir-mcp
+```
+
+Or run it without a global install:
+
+```bash
+npx @voramind/mukhtabir-mcp
+```
+
 The HTTP transport is intended for operator-managed, self-hosted deployments. This package now ships programmatic helpers for control-plane tenant lookup, secret-reference resolution, external rate limiting, HTTP audit sinks, and immediate tenant-control events, but operators still need to provide the backing services before exposing it to shared internet-facing traffic.
 
 ## What It Provides

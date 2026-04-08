@@ -16,7 +16,7 @@ Detailed usage, API examples, and package-specific configuration live in the REA
 | --- | --- | --- |
 | [`python/`](./python) | [`mukhtabir`](./python/README.md) | Typed sync and async Python clients for the Mukhtabir API |
 | [`typescript/`](./typescript) | [`@voramind/mukhtabir-sdk`](./typescript/README.md) | Official TypeScript SDK for Node.js and compatible runtimes |
-| [`mcp/`](./mcp) | [`@mukhtabir/mcp`](./mcp/README.md) | MCP server with Mukhtabir tools, resources, and prompts |
+| [`mcp/`](./mcp) | [`@voramind/mukhtabir-mcp`](./mcp/README.md) | MCP server with Mukhtabir tools, resources, and prompts |
 
 ## Which One Should I Use?
 

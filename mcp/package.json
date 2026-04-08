@@ -1,12 +1,12 @@
 {
-  "name": "@mukhtabir/mcp",
+  "name": "@voramind/mukhtabir-mcp",
   "version": "0.1.0",
   "description": "Mukhtabir MCP server",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
   "bin": {
-    "mukhtabir-mcp": "./dist/cli.js"
+    "mukhtabir-mcp": "dist/cli.js"
   },
   "files": [
     "dist",

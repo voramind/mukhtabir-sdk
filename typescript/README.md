@@ -8,6 +8,14 @@ Official TypeScript SDK for the Mukhtabir API.
 npm install @voramind/mukhtabir-sdk
 ```
 
+```bash
+yarn add @voramind/mukhtabir-sdk
+```
+
+```bash
+pnpm add @voramind/mukhtabir-sdk
+```
+
 Node 18+ is required. In other runtimes, provide a compatible `fetch` implementation.
 
 The snippets below use `logger` as a placeholder for your application's structured logger.

@@ -35,6 +35,50 @@ By default, the SDKs target `https://mukhtabir.hbku.edu.qa/api/v1`.
 
 The MCP server is documented for local use and operator-managed self-hosted HTTP deployments. This repository ships the HTTP transport and tenant-resolution hooks, but not the control plane, secret-manager integration, external abuse detection, or production audit backend required for shared internet-facing hosting.
 
+## Install
+
+### TypeScript SDK
+
+Install the published SDK from npm:
+
+```bash
+npm install @voramind/mukhtabir-sdk
+```
+
+```bash
+yarn add @voramind/mukhtabir-sdk
+```
+
+```bash
+pnpm add @voramind/mukhtabir-sdk
+```
+
+### MCP Server
+
+Install the published MCP server package globally:
+
+```bash
+npm install -g @voramind/mukhtabir-mcp
+```
+
+```bash
+pnpm add -g @voramind/mukhtabir-mcp
+```
+
+Run it without a global install:
+
+```bash
+npx @voramind/mukhtabir-mcp
+```
+
+```bash
+yarn dlx @voramind/mukhtabir-mcp
+```
+
+```bash
+pnpm dlx @voramind/mukhtabir-mcp
+```
+
 ## Development
 
 There is no single root build step. Work inside the package you want to develop.
@@ -72,6 +116,14 @@ place for the live integration gate.
 
 ### TypeScript SDK
 
+Install the published package with:
+
+```bash
+npm install @voramind/mukhtabir-sdk
+```
+
+For local development:
+
 ```bash
 cd typescript
 npm install
@@ -81,6 +133,20 @@ npm test
 See [`typescript/README.md`](./typescript/README.md) for client usage, exported types, examples, and webhook handling.
 
 ### MCP Server
+
+Install the published package with:
+
+```bash
+npm install -g @voramind/mukhtabir-mcp
+```
+
+Or run it directly with:
+
+```bash
+npx @voramind/mukhtabir-mcp
+```
+
+For local development:
 
 ```bash
 cd mcp

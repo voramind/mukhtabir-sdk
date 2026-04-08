@@ -4,14 +4,28 @@ TypeScript MCP server for Mukhtabir. It exposes Mukhtabir interviews, candidates
 
 ## Install
 
+Install globally:
+
 ```bash
 npm install -g @voramind/mukhtabir-mcp
+```
+
+```bash
+pnpm add -g @voramind/mukhtabir-mcp
 ```
 
 Or run it without a global install:
 
 ```bash
 npx @voramind/mukhtabir-mcp
+```
+
+```bash
+yarn dlx @voramind/mukhtabir-mcp
+```
+
+```bash
+pnpm dlx @voramind/mukhtabir-mcp
 ```
 
 The HTTP transport is intended for operator-managed, self-hosted deployments. This package now ships programmatic helpers for control-plane tenant lookup, secret-reference resolution, external rate limiting, HTTP audit sinks, and immediate tenant-control events, but operators still need to provide the backing services before exposing it to shared internet-facing traffic.
@@ -36,6 +50,20 @@ The HTTP transport is intended for operator-managed, self-hosted deployments. Th
 
 ## Quick Start
 
+Run the published CLI over `stdio`:
+
+```bash
+MUKHTABIR_API_KEY=... mukhtabir-mcp
+```
+
+Or without a global install:
+
+```bash
+MUKHTABIR_API_KEY=... npx @voramind/mukhtabir-mcp
+```
+
+For local development from this repository:
+
 ```bash
 cd mcp
 npm install
@@ -51,7 +79,13 @@ npm run build
 
 ## Connect from Claude and Codex
 
-For editor and desktop clients, build once and point the client at the compiled CLI entrypoint:
+If you installed the package globally, point clients at the published CLI binary:
+
+```bash
+npm install -g @voramind/mukhtabir-mcp
+```
+
+For local development from this repository, build once and point the client at the compiled CLI entrypoint:
 
 ```bash
 cd /path/to/mukhtabir-sdk/mcp
@@ -63,7 +97,17 @@ The examples below assume `MUKHTABIR_API_KEY` is already available in your envir
 
 ### Codex
 
-Add the local `stdio` server:
+Add the installed `stdio` server:
+
+```bash
+codex mcp add mukhtabir \
+  --env MUKHTABIR_API_KEY="$MUKHTABIR_API_KEY" \
+  -- mukhtabir-mcp
+
+codex mcp list
+```
+
+Or add the local built server from a checkout:
 
 ```bash
 codex mcp add mukhtabir \
@@ -83,7 +127,34 @@ codex mcp add mukhtabir-http \
 
 ### Claude Code
 
-Add the local `stdio` server:
+Add the installed `stdio` server:
+
+```bash
+claude mcp add --transport stdio --scope project \
+  -e MUKHTABIR_API_KEY="$MUKHTABIR_API_KEY" \
+  mukhtabir -- \
+  mukhtabir-mcp
+
+claude mcp get mukhtabir
+```
+
+Project-scoped `.mcp.json` equivalent for an installed package:
+
+```json
+{
+  "mcpServers": {
+    "mukhtabir": {
+      "type": "stdio",
+      "command": "mukhtabir-mcp",
+      "env": {
+        "MUKHTABIR_API_KEY": "${MUKHTABIR_API_KEY}"
+      }
+    }
+  }
+}
+```
+
+Or add the local built `stdio` server from a checkout:
 
 ```bash
 claude mcp add --transport stdio --scope project \
@@ -94,7 +165,7 @@ claude mcp add --transport stdio --scope project \
 claude mcp get mukhtabir
 ```
 
-Project-scoped `.mcp.json` equivalent:
+Project-scoped `.mcp.json` equivalent for a checkout:
 
 ```json
 {
@@ -121,7 +192,23 @@ claude mcp add --transport http \
 
 ### Claude Desktop
 
-For a local `stdio` server, add a local entry to `claude_desktop_config.json` with the same command and args:
+For an installed `stdio` server, add an entry to `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "mukhtabir": {
+      "type": "stdio",
+      "command": "mukhtabir-mcp",
+      "env": {
+        "MUKHTABIR_API_KEY": "..."
+      }
+    }
+  }
+}
+```
+
+For a local checkout, add the compiled CLI entrypoint instead:
 
 ```json
 {
